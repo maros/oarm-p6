@@ -1,0 +1,29 @@
+* basic handling
+    * dirty
+    * build resultset class
+    * views/statements
+    * inflator/deflator
+* basic types
+    * experesion
+    * aggregate
+    * uninflated
+* relations
+    * belongs to
+    * might have
+    * has many
+    * (many2many)
+* resultsets
+    * fields
+    * join/prefetch
+    * chain
+    * search
+    * group
+    * order
+    * limit
+    * offset
+    * for update
+    * having
+    * (window)
+    * (union)
+* query builder
+    * from rs
