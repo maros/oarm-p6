@@ -7,7 +7,9 @@ role Oarm::Table {
     # dirty values
 
     method oarm_resultset_new() {
+        say "BUILD NEW RS";
         my $resultset_type = self.HOW.oarm_resultset;
+        say $resultset_type;
         #say $rs.name;
         #say $resultset_type.HOW.new();
         #say "RS" ~ self;
@@ -86,7 +88,7 @@ role Oarm::Table {
         }
         if (%extra.Int > 0) {
             for @oarm_columns -> $attr {
-                my $column = $attr.column;
+                my $column = $attr.oarm_column;
                 if (%extra{$column}:exists) {
                     # TODO Exception
                     die('Table colision!');
@@ -99,12 +101,12 @@ role Oarm::Table {
 }
 
 role Oarm::TableHOW {
-    has Str $!oarm_table;
+    has Str $!oarm_table is required;
     has $!oarm_resultset;
 
     method oarm_primary() {
         return self.oarm_columns.grep({
-            $_.is_primary;
+            $_.oarm_is_primary;
         });
     }
 
@@ -118,11 +120,34 @@ role Oarm::TableHOW {
         return $!oarm_resultset;
     }
 
-    method oarm_table(Str $set?) {
-        $!oarm_table = $set
-            if $set;
-        say "INIT ";
+    method oarm_table() {
         return $!oarm_table;
+    }
+
+    method oarm_init_table(%def) {
+        if (defined $!oarm_table) {
+            Oarm::X::Class.new(
+                class   => self.package.^name,
+                error   => 'Cannot call oarm_init_table twice',
+            ).throw;
+        }
+
+        for $.^attributes.list -> $attr {
+            my $key = $attr.name;
+            if ($key ~~ m/\$(\!|\.)?oarm_(.+)/) {
+                $key = $1.STR;
+                if (defined %def{$key}) {
+                    $attr.set_value(self , %def{$key}:delete)
+                }
+            }
+        }
+
+        if (%def.Int) {
+            Oarm::X::Class.new(
+                class   => self.package.^name,
+                error   => 'Unknown attributes in table definition: ' ~ %def.keys.join(', ')
+            ).throw;
+        }
     }
 
     method compose(Mu:U $class) {

@@ -1,6 +1,6 @@
 use Oarm;
 
-class Simple is Oarm::Table('simple_table') {
+class Simple is oarm_table( table => 'simple_table' ) {
     has $.id is column(
         is_primary => True,
         is_nullable => False
@@ -21,7 +21,7 @@ class Simple is Oarm::Table('simple_table') {
     has $other;
 }
 
-class Other is Oarm::Table('other_table') {
+class Other is oarm_table( table => 'other_table' ) {
     has $.id is column(
         is_primary => True,
         is_nullable => False
