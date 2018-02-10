@@ -1,10 +1,17 @@
+1. handling of dirty flag
+2. handling of lazy inflators
+3. resultset classes
+
+
+General:
+
 * basic handling
     * dirty
     * build resultset class
     * views/statements
     * inflator/deflator
 * basic types
-    * experesion
+    * experession
     * aggregate
     * uninflated
 * relations
@@ -25,5 +32,6 @@
     * having
     * (window)
     * (union)
+* resultset iterator class?
 * query builder
     * from rs

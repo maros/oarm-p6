@@ -4,7 +4,11 @@ use Oarm::Exception;
 use Oarm::Sql;
 use Oarm::ResultSet;
 
-class Oarm {};
+class Oarm {}
+
+class Rawx {
+    has $!raw;
+}
 
 # multi trait_mod:<is>(Mu:U $class, :$oarm_tabe) is export {
 #     Oarm::X::Class.new(
@@ -14,7 +18,7 @@ class Oarm {};
 # }
 
 multi trait_mod:<is>(Mu:U $class, :$oarm_table!) is export {
-    say "CLASS Trait:" ~ $class.^name ~ " for table ";
+    say "[C] CLASS Trait:" ~ $class.^name ~ " for table ";
     my $classHOW = $class.HOW;
     $classHOW.add_role($class, Oarm::Table);
     $classHOW.^mixin: Oarm::TableHOW;
@@ -22,15 +26,13 @@ multi trait_mod:<is>(Mu:U $class, :$oarm_table!) is export {
 }
 
 multi trait_mod:<is>(Attribute $a, :$has_one!) is export  {
-    say "HAS ONE Trait: " ~ $a;
+    say "[C][A] HAS ONE Trait: " ~ $a;
+    #$a.^mixin: Oarm::HasOneHOW;
+    #$a.oarm_init_hasone($column.hash);
 }
 
 multi trait_mod:<is>(Attribute $a, :$column!) is export  {
-    say "COLUMN Trait: " ~ $a;
+    say "[C][A] COLUMN Trait: " ~ $a;
     $a.^mixin: Oarm::ColumnHOW;
-    if ($column ~~ Bool) {
-        $a.oarm_init_column({});
-    } else {
-        $a.oarm_init_column($column.hash);
-    }
+    $a.oarm_init_column($column.hash);
 }

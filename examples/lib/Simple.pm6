@@ -28,13 +28,14 @@ class Other is oarm_table( table => 'other_table' ) {
     );
 }
 
-my $x = Simple.oarm_resultset_new.hu();
+say "##########################################";
+#my $x = Simple.oarm_resultset_new.hu();
 
 
 #say Simple.HOW.oarm_table;
 #ay Simple.HOW.oarm_primary;
 my $h = Simple.new( name => 'hase', index => 22 );
-say $h.oarm_in_db;
-say $h.oarm_extra;
+say 'Indb'~$h.oarm_in_db;
+say 'Index'~$h.index;
 $h.oarm_insert({name => 'hui', hee => 1 });
-say $h.name ~ ' -> ' ~ $h.index;
+say 'Name:' ~$h.name ~ ' -> ' ~ $h.index;

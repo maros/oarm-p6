@@ -1,5 +1,5 @@
-use Oarm::Column;
-use Oarm::ResultSet;
+require Oarm::Column;
+require Oarm::ResultSet;
 
 role Oarm::Table {
     has Bool $.oarm_in_db is default(False) is rw;
@@ -7,8 +7,8 @@ role Oarm::Table {
     # dirty values
 
     method oarm_resultset_new() {
-        say "BUILD NEW RS";
         my $resultset_type = self.HOW.oarm_resultset;
+        say "BUILD NEW RS";
         say $resultset_type;
         #say $rs.name;
         #say $resultset_type.HOW.new();
@@ -73,8 +73,16 @@ role Oarm::Table {
         # TODO set data
     }
 
+    method oarm_read_db_values(%values) {
+        my @oarm_columns = self.HOW.oarm_columns().list;
+        for @oarm_columns -> $attr {
+
+        }
+    }
+
     method oarm_set_values(%extra) {
         my @oarm_columns = self.HOW.oarm_columns().list;
+        # Loop attributes
         for @oarm_columns -> $attr {
             my $moniker = $attr.oarm_moniker;
             if (%extra{$moniker}:exists) {
@@ -86,6 +94,7 @@ role Oarm::Table {
                 }
             }
         }
+        # Check rest for possible colisions
         if (%extra.Int > 0) {
             for @oarm_columns -> $attr {
                 my $column = $attr.oarm_column;
@@ -135,32 +144,54 @@ role Oarm::TableHOW {
         for $.^attributes.list -> $attr {
             my $key = $attr.name;
             if ($key ~~ m/\$(\!|\.)?oarm_(.+)/) {
-                $key = $1.STR;
-                if (defined %def{$key}) {
-                    $attr.set_value(self , %def{$key}:delete)
+                my $hash_key = $1.STR;
+                if (defined %def{$hash_key}) {
+                    $attr.set_value(self , %def{$hash_key}:delete)
+                } elsif ($attr.can('required') && $attr.required) {
+                    Oarm::X::Class.new(
+                        class   => self.^name,
+                        error   => 'Missing attributes in table definition: ' ~ $hash_key
+                    ).throw;
                 }
             }
         }
 
         if (%def.Int) {
             Oarm::X::Class.new(
-                class   => self.package.^name,
+                class   => self.^name,
                 error   => 'Unknown attributes in table definition: ' ~ %def.keys.join(', ')
             ).throw;
         }
     }
 
     method compose(Mu:U $class) {
+        say "[C] COMPOSE " ~ $class.^name;
+
+        # Build accessors
+        for self.oarm_columns() -> $attr {
+            $attr.oarm_build_accessor();
+        }
+
         callsame();
-        say "COMPOSE";
-        my $resultset_name = self.name($class) ~ '::ResultSet';
-        my $resultset_type = Metamodel::ClassHOW.new_type(
-            name    => $resultset_name,
-        );
-        my $resultset_meta = $resultset_type.HOW;
-        $resultset_meta.^mixin: Oarm::ResultSetHOW;
-        $resultset_meta.add_parent($resultset_type, Oarm::ResultSet);
-        $resultset_meta.compose($resultset_type);
-        $!oarm_resultset = $resultset_type;
+
+        # Build resultset class
+        unless (defined $!oarm_resultset) {
+            my $resultset_name = self.name($class) ~ '::ResultSet';
+            say "[C] Build resultset " ~ $resultset_name;
+            my $resultset_type = Metamodel::ClassHOW.new_type(
+                name    => $resultset_name,
+            );
+            my $resultset_meta = $resultset_type.HOW;
+            $resultset_meta.^mixin: Oarm::ResultSetHOW;
+            $resultset_meta.add_parent($resultset_type, Oarm::ResultSet);
+            $resultset_meta.compose($resultset_type);
+
+            # TODO dynamic export
+            #$resultset_meta.trait_mod:($resultset_type, export => True);
+
+            $!oarm_resultset = $resultset_type;
+        }
+
+
     }
 }
