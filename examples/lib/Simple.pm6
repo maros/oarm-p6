@@ -18,11 +18,15 @@ class Simple is oarm_table( table => 'simple_table' ) {
         inflator => 'inflate_other'
     );
 
+
     has @.related is has_one();
     #has @.related is has_many()
 
     has $.hell is rw;
-    has $other;
+
+    method inflate_other($raw) {
+        say "INFLATE_OTHER";
+    }
 }
 
 class Other is oarm_table( table => 'other_table' ) {
@@ -38,8 +42,10 @@ say "##########################################";
 
 #say Simple.HOW.oarm_table;
 #ay Simple.HOW.oarm_primary;
-my $h = Simple.new( name => 'hase', index => 22 );
+my $h = Simple.new( name => 'hase', index => 22, other => 'hehe' );
 say 'Indb'~$h.oarm_in_db;
 say 'Index'~$h.index;
 $h.oarm_insert({name => 'hui', hee => 1 });
+say 'DIRTY:' ~ $h.oarm_is_dirty() ~ ';' ~ $h.oarm_is_dirty('name') ~ ';' ~ $h.oarm_is_dirty('other');
 say 'Name:' ~$h.name ~ ' -> ' ~ $h.index;
+say $h.other;

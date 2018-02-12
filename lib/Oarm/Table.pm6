@@ -1,10 +1,27 @@
-require Oarm::Column;
-require Oarm::ResultSet;
+use Oarm::ResultSet;
+use Oarm::Column;
+
 
 role Oarm::Table {
     has Bool $.oarm_in_db is default(False) is rw;
-    has Hash $.oarm_extra;
-    # dirty values
+    has %.oarm_extra;
+    has Bool %.oarm_dirty;
+
+    method oarm_set_dirty($column) {
+        $column = $column.name
+            if $column ~~ Attribute;
+        return %.oarm_dirty{$column} = True;
+    }
+
+    multi method oarm_is_dirty($column) {
+        $column = $column.name
+            if $column ~~ Attribute;
+        return %.oarm_dirty{$column} // False;
+    }
+
+    multi method oarm_is_dirty() {
+        return %.oarm_dirty.Bool;
+    }
 
     method oarm_resultset_new() {
         my $resultset_type = self.HOW.oarm_resultset;
@@ -38,10 +55,10 @@ role Oarm::Table {
     }
 
     method oarm_insert(%extra?, %args?) {
-        die Oarm::X::Record.new(
+        Oarm::X::Record.new(
             error => "Object was already stored",
             item => self,
-        ) if $.oarm_in_db;
+        ).throw if $.oarm_in_db;
 
         # Set values in object if possible
         %extra = self.oarm_set_values(%extra)
@@ -90,17 +107,21 @@ role Oarm::Table {
                     # TODO! fix typename
                     X::Assignment::RO.new( typename => $attr.name ).throw;
                 } else {
-                    $attr.set_value(self, %extra{$moniker}:delete)
+                    $attr.oarm_set_value(self, %extra{$moniker}:delete)
                 }
             }
         }
+
         # Check rest for possible colisions
         if (%extra.Int > 0) {
             for @oarm_columns -> $attr {
                 my $column = $attr.oarm_column;
                 if (%extra{$column}:exists) {
                     # TODO Exception
-                    die('Table colision!');
+                    Oarm::X::Record.new(
+                        error => "Setting " ~ $column ~ " conflicts with column definition",
+                        item => self,
+                    ).throw;
                 }
             }
         }
@@ -121,6 +142,7 @@ role Oarm::TableHOW {
 
     method oarm_columns() {
         return self.attributes(self).grep({
+            #$_.can('oarm_moniker');
             $_.does(Oarm::ColumnHOW);
         });
     }

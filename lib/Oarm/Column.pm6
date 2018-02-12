@@ -16,6 +16,26 @@ role Oarm::ColumnHOW {
         return $key;
     }
 
+    method oarm_get_value($instance) {
+        my $value = self.get_value($instance);
+        if ($value ~~ Oarm::Raw) {
+            $value = self.oarm_inflate_value($instance, $value);
+            self.set_value($instance, $value);
+        }
+        return $value;
+    }
+
+    method oarm_set_value($instance, $set) {
+        my $value = self.oarm_get_value($instance);
+        self.set_value($instance, $set);
+        say "Called set_value";
+        if ($value !~~ $set) {
+            say "SET DIRTY" ~ self.oarm_moniker;
+            $instance.oarm_set_dirty(self.oarm_moniker);
+        }
+        return $set;
+    }
+
     method oarm_build_accessor() {
         my $class   = self.package;
         my $moniker = $.oarm_moniker;
@@ -37,13 +57,8 @@ role Oarm::ColumnHOW {
                 $class,
                 $moniker,
                 method () {
-                    say "Readonly";
-                    my $value   = $attr.get_value(self);
-                    if ($value ~~ Oarm::Raw) {
-                        $value = $attr.oarm_inflate_value(self, $value);
-                        $attr.set_value(self, $value);
-                    }
-                    return $value;
+                    say "Called ro acessor";
+                    return $attr.oarm_get_value(self);
                 }
             );
         } else {
@@ -52,21 +67,13 @@ role Oarm::ColumnHOW {
                 $class,
                 $moniker,
                 method ($set?) {
-                    say "Rw";
-                    my $value = $attr.get_value(self);
                     if (defined $set) {
-                        $attr.set_value(self, $set);
-                        if ($value !~~ $set) {
-                            self
-                        }
-                        $value = $set;
+                        say "Called rw acessor set";
+                        return $attr.oarm_set_value(self, $set);
                     } else {
-                        if ($value ~~ Oarm::Raw) {
-                            $value = $attr.oarm_inflate_value(self, $value);
-                            $attr.set_value(self, $value);
-                        }
+                        say "Called rw acessor read";
+                        return $attr.oarm_get_value(self)
                     }
-                    return $value;
                 }
             );
         }
