@@ -1,5 +1,5 @@
-require Oarm::Exception;
-require Rawx;
+use Oarm::Types;
+#require Oarm::Exception;
 
 role Oarm::ColumnHOW {
     has Str  $.oarm_column is required;
@@ -21,9 +21,9 @@ role Oarm::ColumnHOW {
         my $moniker = $.oarm_moniker;
         my $attr    = self;
 
-        # No need to build our own accessors
+        # No need to build our some basic acessors
         return
-            if ! defined $.oarm_inflator && self.readonly;
+            if self.readonly && ! defined $.oarm_inflator;
 
         # if (self.rw && self.oarm_is_nullable) {
         #     $class.HOW.add_method(
@@ -32,15 +32,39 @@ role Oarm::ColumnHOW {
         # }
 
         if (self.readonly ) {
+            say "[C][A] Build readonly acessor " ~ $moniker;
             $class.HOW.add_method(
                 $class,
                 $moniker,
                 method () {
                     say "Readonly";
                     my $value   = $attr.get_value(self);
-                    if ($value ~~ Rawx) {
+                    if ($value ~~ Oarm::Raw) {
                         $value = $attr.oarm_inflate_value(self, $value);
                         $attr.set_value(self, $value);
+                    }
+                    return $value;
+                }
+            );
+        } else {
+            say "[C][A] Build rw acessor " ~ $moniker;
+            $class.HOW.add_method(
+                $class,
+                $moniker,
+                method ($set?) {
+                    say "Rw";
+                    my $value = $attr.get_value(self);
+                    if (defined $set) {
+                        $attr.set_value(self, $set);
+                        if ($value !~~ $set) {
+                            self
+                        }
+                        $value = $set;
+                    } else {
+                        if ($value ~~ Oarm::Raw) {
+                            $value = $attr.oarm_inflate_value(self, $value);
+                            $attr.set_value(self, $value);
+                        }
                     }
                     return $value;
                 }
@@ -48,8 +72,7 @@ role Oarm::ColumnHOW {
         }
     }
 
-    method oarm_inflate_value($instance!, Rawx $value) {
-        
+    method oarm_inflate_value($instance!, $value) {
         return $value
             unless defined $value && $.oarm_inflator;
 

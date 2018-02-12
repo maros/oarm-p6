@@ -13,6 +13,10 @@ class Simple is oarm_table( table => 'simple_table' ) {
     has $.index is column(
         column => 'idx',
     );
+    has $.other is column(
+        column => 'idx',
+        inflator => 'inflate_other'
+    );
 
     has @.related is has_one();
     #has @.related is has_many()

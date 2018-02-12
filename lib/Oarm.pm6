@@ -1,14 +1,11 @@
-use Oarm::Table;
-use Oarm::Column;
+unit module Oarm:ver<0.0.1>:auth<Maroš (maros@k-1.com)>;
+
+use Oarm::Types;
 use Oarm::Exception;
 use Oarm::Sql;
 use Oarm::ResultSet;
-
-class Oarm {}
-
-class Rawx {
-    has $!raw;
-}
+use Oarm::Column;
+use Oarm::Table;
 
 # multi trait_mod:<is>(Mu:U $class, :$oarm_tabe) is export {
 #     Oarm::X::Class.new(
