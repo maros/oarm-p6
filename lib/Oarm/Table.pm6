@@ -13,6 +13,18 @@ role Oarm::Table {
         return %.oarm_dirty{$column} = True;
     }
 
+    multi method oarm_reset_dirty($column) {
+        $column = $column.name
+            if $column ~~ Attribute;
+        return %.oarm_dirty{$column}:DELETE;
+    }
+
+    multi method oarm_reset_dirty() {
+        my $return = %.oarm_dirty.Bool;
+        %.oarm_dirty = ();
+        return $return;
+    }
+
     multi method oarm_is_dirty($column) {
         $column = $column.name
             if $column ~~ Attribute;

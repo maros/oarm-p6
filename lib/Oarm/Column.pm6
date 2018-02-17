@@ -28,10 +28,8 @@ role Oarm::ColumnHOW {
     method oarm_set_value($instance, $set) {
         my $value = self.oarm_get_value($instance);
         self.set_value($instance, $set);
-        say "Called set_value";
         if ($value !~~ $set) {
-            say "SET DIRTY" ~ self.oarm_moniker;
-            $instance.oarm_set_dirty(self.oarm_moniker);
+            $instance.oarm_set_dirty(self.name);
         }
         return $set;
     }
@@ -41,18 +39,11 @@ role Oarm::ColumnHOW {
         my $moniker = $.oarm_moniker;
         my $attr    = self;
 
-        # No need to build our some basic acessors
+        # No need to build some basic acessors
         return
             if self.readonly && ! defined $.oarm_inflator;
 
-        # if (self.rw && self.oarm_is_nullable) {
-        #     $class.HOW.add_method(
-        #         $class,
-        #         ''
-        # }
-
         if (self.readonly ) {
-            say "[C][A] Build readonly acessor " ~ $moniker;
             $class.HOW.add_method(
                 $class,
                 $moniker,
@@ -62,7 +53,6 @@ role Oarm::ColumnHOW {
                 }
             );
         } else {
-            say "[C][A] Build rw acessor " ~ $moniker;
             $class.HOW.add_method(
                 $class,
                 $moniker,
@@ -89,23 +79,9 @@ role Oarm::ColumnHOW {
             return $.oarm_inflator.($instance, $value);
         }
 
-        # TODO warn
+        # TODO warn if inflator is invalid
         return $value;
     }
-
-    # $class.HOW.add_method(
-        #     $class,
-        #     $moniker,
-        # );
-        #
-        #     return method ($value?) {
-        #         if ($value.)
-        #     };
-        # } else {
-        #     return method () {
-        #         say "ACC ro";
-        #     };
-        # }
 
     method oarm_init_column(%def) {
         my $class   = self.package;
